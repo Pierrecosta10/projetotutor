@@ -6,8 +6,9 @@ import jakarta.persistence.*;
 @Table(name = "tutorials")
 public class TutorialModel {
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(name = "title")
     private String title;
@@ -16,23 +17,23 @@ public class TutorialModel {
     private String description;
 
     @Column(name = "published")
-    private boolean published;
+    private Boolean published;
 
     public TutorialModel() {
     }
 
-    public TutorialModel(long id, String title, String description, boolean published) {
+    public TutorialModel(Long id, String title, String description, Boolean published) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.published = published;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -52,16 +53,21 @@ public class TutorialModel {
         this.description = description;
     }
 
-    public boolean isPublished() {
+    public Boolean getPublished() {
         return published;
     }
 
-    public void setPublished(boolean published) {
+    public void setPublished(Boolean published) {
         this.published = published;
     }
 
     @Override
     public String toString() {
-        return "tutorial [id=" + ", title" + title + ", desc=" + description + "]";
+        return "TutorialModel{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", published=" + published +
+                '}';
     }
 }
