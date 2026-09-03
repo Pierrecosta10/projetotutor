@@ -29,7 +29,7 @@ public class TutorialController {
             if (title == null)
                 tutorialRepository.findAll().forEach(tutorials::add);
             else
-                tutorialRepository.findByTitleContaining(title).forEach(tutorials::add);
+                tutorialRepository.findPorTitle(title).forEach(tutorials::add);
 
             if (tutorials.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -81,6 +81,17 @@ public class TutorialController {
         }
     }
 
+    @GetMapping("/tutorials/search")
+    public ResponseEntity<List<TutorialModel>> findByTitle(@RequestParam String title){
+        try {
+            List<TutorialModel> tutorials = tutorialRepository.findPorTitle(title);
+
+            return new ResponseEntity<>(tutorials,HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @DeleteMapping("/tutorials/{id}")
     public ResponseEntity<HttpStatus> deleteTutorial(@PathVariable ("id") Long id) {
         try {
@@ -114,4 +125,6 @@ public class TutorialController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+
 }
