@@ -1,0 +1,29 @@
+package com.tutorials.projetotutor.service;
+
+import com.tutorials.projetotutor.model.TutorialModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface TutorialService {
+
+    List<TutorialModel> getAllTutorials(String title);
+
+    Optional<TutorialModel> getTutorialById(Long id);
+
+    TutorialModel createTutorial(TutorialModel tutorial);
+
+    Optional<TutorialModel> updateTutorial(Long id, TutorialModel tutorial);
+
+    List<TutorialModel> findBytitle(String tile);
+
+    void deleteTutorial(Long id);
+
+    void deleteAllTutorials();
+
+    Page<TutorialModel> findByPublished(Pageable peageable);
+
+    List<TutorialModel> getAllTuorials(String title);
+}
