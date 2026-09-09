@@ -21,8 +21,6 @@ public interface TutorialService {
 
     void deleteTutorial(Long id);
 
-    void deleteAllTutorials();
-
     Page<TutorialModel> findByPublished(Pageable peageable);
 
     List<TutorialModel> getAllTuorials(String title);
