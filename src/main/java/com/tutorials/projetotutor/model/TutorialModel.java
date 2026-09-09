@@ -1,5 +1,6 @@
 package com.tutorials.projetotutor.model;
 
+import com.tutorials.projetotutor.relations.DetalhesTutorialModel;
 import jakarta.persistence.*;
 
 @Entity
@@ -18,6 +19,10 @@ public class TutorialModel {
 
     @Column(name = "published")
     private Boolean published;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "detalhes_id", unique = true)
+    private DetalhesTutorialModel detalhes;
 
     public TutorialModel() {
     }
@@ -61,6 +66,14 @@ public class TutorialModel {
         this.published = published;
     }
 
+    public DetalhesTutorialModel getDetalhes() {
+        return detalhes;
+    }
+
+    public void setDetalhes(DetalhesTutorialModel detalhes) {
+        this.detalhes = detalhes;
+    }
+
     @Override
     public String toString() {
         return "TutorialModel{" +
@@ -70,4 +83,5 @@ public class TutorialModel {
                 ", published=" + published +
                 '}';
     }
+
 }
