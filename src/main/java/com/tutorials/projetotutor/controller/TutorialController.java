@@ -2,7 +2,11 @@ package com.tutorials.projetotutor.controller;
 
 import com.tutorials.projetotutor.model.TutorialModel;
 import com.tutorials.projetotutor.repository.TutorialRepository;
+import com.tutorials.projetotutor.service.TutorialService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,19 +22,15 @@ public class TutorialController {
 
     @Autowired
     TutorialRepository tutorialRepository;
+    @Autowired
+    private TutorialService tutorialService;
 
     // Get - Buscar Todos
 
     @GetMapping("/tutorials")
     public ResponseEntity<List<TutorialModel>> getAllTutorials(@RequestParam(required = false) String title) {
         try {
-            List<TutorialModel> tutorials;
-
-            if (title == null)
-                tutorials = tutorialRepository.findAll();
-            else {
-                tutorials = tutorialRepository.findPorTitle(title);
-            }
+            List<TutorialModel> tutorials = tutorialService.getAllTutorials(title);
 
             return ResponseEntity.ok(tutorials);
 
@@ -43,13 +43,12 @@ public class TutorialController {
 
     @GetMapping("/tutorials/{id}")
     public ResponseEntity<TutorialModel> getTutorialById(@PathVariable("id") Long id) {
-        Optional<TutorialModel> tutorialData = tutorialRepository.findById(id);
+        Optional<TutorialModel> tutorialData = tutorialService.getTutorialById(id);
 
         if (tutorialData.isPresent()) {
             return ResponseEntity.ok(tutorialData.get());
-        } else {
-            return ResponseEntity.notFound().build();
         }
+        return ResponseEntity.notFound().build();
     }
 
     // Criar
@@ -57,8 +56,8 @@ public class TutorialController {
     @PostMapping("/tutorials")
     public ResponseEntity<TutorialModel> createTutorial(@RequestBody TutorialModel tutorial) {
         try {
-            TutorialModel tutorialSalvo = tutorialRepository
-                    .save(tutorial);
+            TutorialModel tutorialSalvo = tutorialService
+                    .createTutorial(tutorial);
 
             URI location = URI.create(
                     "/api/tutorials" + tutorialSalvo.getId());
@@ -75,21 +74,12 @@ public class TutorialController {
     @PutMapping("/tutorials/{id}")
     public ResponseEntity<TutorialModel> updateTutorial(@PathVariable("id") Long id, @RequestBody TutorialModel tutorial) {
 
-        Optional<TutorialModel> tutorialData = tutorialRepository.findById(id);
+        Optional<TutorialModel> tutorialAtualizado = tutorialService.updateTutorial(id, tutorial);
 
-        if (tutorialData.isPresent()) {
-            TutorialModel tutorialAtual = tutorialData.get();
-
-            tutorialAtual.setTitle(tutorial.getTitle());
-            tutorialAtual.setDescription(tutorial.getDescription());
-            tutorialAtual.setPublished(tutorial.getPublished());
-
-            TutorialModel tutorialAtualizado = tutorialRepository.save(tutorialAtual);
-
-            return ResponseEntity.ok(tutorialAtualizado);
-        } else {
-            return ResponseEntity.notFound().build();
+        if (tutorialAtualizado.isPresent()) {
+            return ResponseEntity.ok(tutorialAtualizado.get());
         }
+        return ResponseEntity.notFound().build();
     }
 
     // Get - Busca por Titulo
@@ -97,7 +87,7 @@ public class TutorialController {
     @GetMapping("/tutorials/search")
     public ResponseEntity<List<TutorialModel>> findByTitle(@RequestParam String title){
         try {
-            List<TutorialModel> tutorials = tutorialRepository.findPorTitle(title);
+            List<TutorialModel> tutorials = tutorialService.findBytitle(title);
 
             return ResponseEntity.ok(tutorials);
         } catch (Exception e) {
@@ -109,7 +99,7 @@ public class TutorialController {
     @DeleteMapping("/tutorials/{id}")
     public ResponseEntity<HttpStatus> deleteTutorial(@PathVariable ("id") Long id) {
         try {
-            tutorialRepository.deleteById(id);
+            tutorialService.deleteTutorial(id);
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -121,7 +111,7 @@ public class TutorialController {
     @DeleteMapping("/tutorials")
     public ResponseEntity<HttpStatus> deleteAllTutorials() {
         try {
-            tutorialRepository.deleteAll();
+            tutorialService.deleteAllTutorials();
             return ResponseEntity.notFound().build();
 
         } catch (Exception e) {
@@ -132,9 +122,11 @@ public class TutorialController {
     // Get - Buscar Publicados
 
     @GetMapping("/tutorials/published")
-    public ResponseEntity<List<TutorialModel>> findByPublished() {
+    public ResponseEntity<Page<TutorialModel>> findByPublished(
+            @PageableDefault(size = 10)Pageable peageable
+    ) {
         try {
-            List<TutorialModel> tutorials = tutorialRepository.findByPublished(true);
+            Page<TutorialModel> tutorials = tutorialService.findByPublished(peageable);
 
             if (tutorials.isEmpty()) {
                 return ResponseEntity.notFound().build();
@@ -144,6 +136,4 @@ public class TutorialController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
-
 }
