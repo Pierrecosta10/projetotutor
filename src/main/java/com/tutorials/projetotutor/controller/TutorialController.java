@@ -59,10 +59,8 @@ public class TutorialController {
             TutorialModel tutorialSalvo = tutorialService
                     .createTutorial(tutorial);
 
-            URI location = URI.create(
-                    "/api/tutorials" + tutorialSalvo.getId());
+            return ResponseEntity.created(new URI("/api/tutorials)")).body(tutorialSalvo);
 
-            return ResponseEntity.created(location).body(tutorialSalvo);
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -100,24 +98,12 @@ public class TutorialController {
     public ResponseEntity<HttpStatus> deleteTutorial(@PathVariable ("id") Long id) {
         try {
             tutorialService.deleteTutorial(id);
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    // Delete - Todos
-
-    @DeleteMapping("/tutorials")
-    public ResponseEntity<HttpStatus> deleteAllTutorials() {
-        try {
-            tutorialService.deleteAllTutorials();
-            return ResponseEntity.notFound().build();
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 
     // Get - Buscar Publicados
 
