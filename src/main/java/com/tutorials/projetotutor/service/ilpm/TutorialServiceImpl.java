@@ -1,7 +1,9 @@
 package com.tutorials.projetotutor.service.ilpm;
 
 import com.tutorials.projetotutor.model.TutorialModel;
+import com.tutorials.projetotutor.relations.CategoriaModel;
 import com.tutorials.projetotutor.relations.DetalhesTutorialModel;
+import com.tutorials.projetotutor.repository.CategoriaRepository;
 import com.tutorials.projetotutor.repository.TutorialRepository;
 import com.tutorials.projetotutor.service.TutorialService;
 import org.springframework.data.domain.Page;
@@ -15,9 +17,11 @@ import java.util.Optional;
 @Service
 public class TutorialServiceImpl implements TutorialService {
     private final TutorialRepository tutorialRepository;
+    private final CategoriaRepository categoriaRepository;
 
-    public TutorialServiceImpl(TutorialRepository tutorialRepository) {
+    public TutorialServiceImpl(TutorialRepository tutorialRepository,CategoriaRepository categoriaRepository) {
         this.tutorialRepository = tutorialRepository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     @Override
@@ -92,5 +96,27 @@ public class TutorialServiceImpl implements TutorialService {
     @Override
     public Page<TutorialModel> findByPublished(Pageable peageable){
         return tutorialRepository.findByPublished(true, peageable);
+    }
+
+    @Override
+    @Transactional
+    public boolean adicionarCategoria(Long tutorialId, Long categoriaId) {
+
+        Optional<TutorialModel> tutorialData =
+                tutorialRepository.findById(tutorialId);
+
+        Optional<CategoriaModel> categoriaData =
+                categoriaRepository.findById(categoriaId);
+
+        if (tutorialData.isEmpty() || categoriaData.isEmpty()) {
+            return false;
+        }
+
+        TutorialModel tutorial = tutorialData.get();
+        CategoriaModel categoria = categoriaData.get();
+
+        tutorial.getCategorias().add(categoria);
+
+        return true;
     }
 }

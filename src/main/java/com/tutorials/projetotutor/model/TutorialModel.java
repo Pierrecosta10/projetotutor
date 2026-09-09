@@ -1,7 +1,11 @@
 package com.tutorials.projetotutor.model;
 
+import com.tutorials.projetotutor.relations.CategoriaModel;
 import com.tutorials.projetotutor.relations.DetalhesTutorialModel;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "tutorials")
@@ -26,6 +30,14 @@ public class TutorialModel {
 
     public TutorialModel() {
     }
+
+    @ManyToMany
+    @JoinTable(
+            name = "tutorial_categorias",
+            joinColumns = @JoinColumn(name = "tutorial_id"),
+            inverseJoinColumns = @JoinColumn(name = "categoria_id")
+    )
+    private Set<CategoriaModel> categorias = new HashSet<>();
 
     public TutorialModel(Long id, String title, String description, Boolean published) {
         this.id = id;
@@ -72,6 +84,14 @@ public class TutorialModel {
 
     public void setDetalhes(DetalhesTutorialModel detalhes) {
         this.detalhes = detalhes;
+    }
+
+    public Set<CategoriaModel> getCategorias() {
+        return categorias;
+    }
+
+    public void setCategorias(Set<CategoriaModel> categorias) {
+        this.categorias = categorias;
     }
 
     @Override

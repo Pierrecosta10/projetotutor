@@ -80,6 +80,21 @@ public class TutorialController {
         return ResponseEntity.notFound().build();
     }
 
+    @PutMapping("/tutorials/{tutorialId}/categorias/{categoriaId}")
+    public ResponseEntity<Void> adicionarCategoria(
+            @PathVariable("tutorialId") Long tutorialId,
+            @PathVariable("categoriaId") Long categoriaId
+    ) {
+        boolean associado =
+                tutorialService.adicionarCategoria(tutorialId, categoriaId);
+
+        if (!associado) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
     // Get - Busca por Titulo
 
     @GetMapping("/tutorials/search")

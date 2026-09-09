@@ -24,4 +24,6 @@ public interface TutorialService {
     Page<TutorialModel> findByPublished(Pageable peageable);
 
     List<TutorialModel> getAllTuorials(String title);
+
+    boolean adicionarCategoria(Long tutorialId, Long categoriaId);
 }
