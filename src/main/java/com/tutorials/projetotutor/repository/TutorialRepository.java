@@ -1,6 +1,8 @@
 package com.tutorials.projetotutor.repository;
 
 import com.tutorials.projetotutor.model.TutorialModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.JpqlQueryBuilder;
@@ -14,13 +16,18 @@ public interface TutorialRepository extends JpaRepository<TutorialModel, Long> {
 
     List<TutorialModel> findByPublished(boolean published);
 
-    @Query("SELECT t FROM TutorialModel t " +
-            "WHERE LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%'))")
-    List<TutorialModel> findPorTitle(String title);
+    @Query( value = "SELECT * FROM tutorials WHERE published = :published ORDER BY id",
+            countQuery = "SELECT COUNT(*) FROM tutorials WHERE published = :published",
+            nativeQuery = true)
+    Page<TutorialModel> findByPublished(
+            @Param("published") boolean published,
+            Pageable pageable);
 
     List<TutorialModel> id(long id);
 
     List<TutorialModel> findByTitle(String title);
+
+    List<TutorialModel> id(Long id);
 
 //    Long id(long id);
 }
