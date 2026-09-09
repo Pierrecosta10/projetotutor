@@ -1,7 +1,9 @@
-package com.tutorials.projetotutor.service;
+package com.tutorials.projetotutor.service.ilpm;
 
 import com.tutorials.projetotutor.model.TutorialModel;
+import com.tutorials.projetotutor.relations.DetalhesTutorialModel;
 import com.tutorials.projetotutor.repository.TutorialRepository;
+import com.tutorials.projetotutor.service.TutorialService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -11,7 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class TutorialServiceImpl implements TutorialService {
     private final TutorialRepository tutorialRepository;
 
@@ -55,6 +56,20 @@ public class TutorialServiceImpl implements TutorialService {
             tutorialAtual.setDescription(tutorial.getDescription());
             tutorialAtual.setPublished(tutorial.getPublished());
 
+            if (tutorial.getDetalhes() != null) {
+
+                // Cria os detalhes se o tutorial ainda não possuir um registro.
+                if (tutorialAtual.getDetalhes() == null) {
+                    tutorialAtual.setDetalhes(new DetalhesTutorialModel());
+                }
+
+                tutorialAtual.getDetalhes().setObjetivo(tutorial.getDetalhes().getObjetivo());
+
+                tutorialAtual.getDetalhes().setDuracaoMinutos(
+                        tutorial.getDetalhes().getDuracaoMinutos()
+                );
+            }
+
             TutorialModel tutorialAtualizado = tutorialRepository.save(tutorialAtual);
 
             return Optional.of(tutorialAtualizado);
@@ -72,11 +87,6 @@ public class TutorialServiceImpl implements TutorialService {
     @Override
     public void deleteTutorial(Long id){
         tutorialRepository.deleteById(id);
-    }
-
-    @Override
-    public void deleteAllTutorials() {
-        tutorialRepository.deleteAll();
     }
 
     @Override
