@@ -1,5 +1,7 @@
 package com.tutorials.projetotutor.controller;
 
+import com.tutorials.projetotutor.dto.TutorialDto;
+import com.tutorials.projetotutor.mapper.TutorialMapper;
 import com.tutorials.projetotutor.model.TutorialModel;
 import com.tutorials.projetotutor.repository.TutorialRepository;
 import com.tutorials.projetotutor.service.TutorialService;
@@ -42,42 +44,40 @@ public class TutorialController {
     // Get - Buscar por ID
 
     @GetMapping("/tutorials/{id}")
-    public ResponseEntity<TutorialModel> getTutorialById(@PathVariable("id") Long id) {
-        Optional<TutorialModel> tutorialData = tutorialService.getTutorialById(id);
-
-        if (tutorialData.isPresent()) {
-            return ResponseEntity.ok(tutorialData.get());
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<TutorialDto> getTutorialById(
+            @PathVariable("id") Long id
+    ) {
+        return tutorialService.getTutorialById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
     // Criar
 
     @PostMapping("/tutorials")
-    public ResponseEntity<TutorialModel> createTutorial(@RequestBody TutorialModel tutorial) {
-        try {
-            TutorialModel tutorialSalvo = tutorialService
-                    .createTutorial(tutorial);
+    public ResponseEntity<TutorialDto> createTutorial(
+            @RequestBody TutorialDto dto
+    ) {
+        TutorialDto tutorialSalvo =
+                tutorialService.createTutorial(dto);
 
-            return ResponseEntity.created(new URI("/api/tutorials)")).body(tutorialSalvo);
+        URI location = URI.create(
+                "/api/tutorials/" + tutorialSalvo.getId()
+        );
 
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        return ResponseEntity.created(location).body(tutorialSalvo);
     }
+
 
     //Put - Atualizar
 
     @PutMapping("/tutorials/{id}")
-    public ResponseEntity<TutorialModel> updateTutorial(@PathVariable("id") Long id, @RequestBody TutorialModel tutorial) {
-
-        Optional<TutorialModel> tutorialAtualizado = tutorialService.updateTutorial(id, tutorial);
-
-        if (tutorialAtualizado.isPresent()) {
-            return ResponseEntity.ok(tutorialAtualizado.get());
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<TutorialDto> updateTutorial(
+            @PathVariable("id") Long id,
+            @RequestBody TutorialDto dto
+    ) {
+        return tutorialService.updateTutorial(id, dto)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/tutorials/{tutorialId}/categorias/{categoriaId}")

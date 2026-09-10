@@ -1,5 +1,7 @@
 package com.tutorials.projetotutor.service;
 
+import com.tutorials.projetotutor.mapper.TutorialMapper;
+import com.tutorials.projetotutor.dto.TutorialDto;
 import com.tutorials.projetotutor.model.TutorialModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,8 +12,6 @@ import java.util.Optional;
 public interface TutorialService {
 
     List<TutorialModel> getAllTutorials(String title);
-
-    Optional<TutorialModel> getTutorialById(Long id);
 
     TutorialModel createTutorial(TutorialModel tutorial);
 
@@ -26,4 +26,10 @@ public interface TutorialService {
     List<TutorialModel> getAllTuorials(String title);
 
     boolean adicionarCategoria(Long tutorialId, Long categoriaId);
+
+    TutorialDto createTutorial(TutorialDto dto);
+
+    Optional<TutorialDto> getTutorialById(Long id);
+
+    Optional<TutorialDto> updateTutorial(Long id, TutorialDto dto);
 }
