@@ -9,7 +9,7 @@ import org.mapstruct.*;
         unmappedTargetPolicy = ReportingPolicy.ERROR
 )
 public abstract class TutorialMapper
-        extends BaseMapper<TutorialDto, TutorialModel> {
+        extends TutorialBaseMapper<TutorialDto, TutorialModel> {
 
     @Override
     public abstract TutorialDto toDto(TutorialModel entity);

@@ -1,7 +1,6 @@
 package com.tutorials.projetotutor.controller;
 
 import com.tutorials.projetotutor.dto.TutorialDto;
-import com.tutorials.projetotutor.mapper.TutorialMapper;
 import com.tutorials.projetotutor.model.TutorialModel;
 import com.tutorials.projetotutor.repository.TutorialRepository;
 import com.tutorials.projetotutor.service.TutorialService;
@@ -44,24 +43,20 @@ public class TutorialController {
     // Get - Buscar por ID
 
     @GetMapping("/tutorials/{id}")
-    public ResponseEntity<TutorialDto> getTutorialById(
-            @PathVariable("id") Long id
-    ) {
-        return tutorialService.getTutorialById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<TutorialDto> getTutorialById(@PathVariable("id") Long id) {
+
+        TutorialDto tutorial = tutorialService.getTutorialById(id);
+
+        return ResponseEntity.ok(tutorial);
     }
+
     // Criar
 
     @PostMapping("/tutorials")
-    public ResponseEntity<TutorialDto> createTutorial(
-            @RequestBody TutorialDto dto
-    ) {
-        TutorialDto tutorialSalvo =
-                tutorialService.createTutorial(dto);
+    public ResponseEntity<TutorialDto> createTutorial(@RequestBody TutorialDto dto) {
+        TutorialDto tutorialSalvo = tutorialService.createTutorial(dto);
 
-        URI location = URI.create(
-                "/api/tutorials/" + tutorialSalvo.getId()
+        URI location = URI.create("/api/tutorials/" + tutorialSalvo.getId()
         );
 
         return ResponseEntity.created(location).body(tutorialSalvo);
@@ -71,22 +66,14 @@ public class TutorialController {
     //Put - Atualizar
 
     @PutMapping("/tutorials/{id}")
-    public ResponseEntity<TutorialDto> updateTutorial(
-            @PathVariable("id") Long id,
-            @RequestBody TutorialDto dto
+    public ResponseEntity<TutorialDto> updateTutorial(@PathVariable("id") Long id, @RequestBody TutorialDto dto
     ) {
-        return tutorialService.updateTutorial(id, dto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return tutorialService.updateTutorial(id, dto).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/tutorials/{tutorialId}/categorias/{categoriaId}")
-    public ResponseEntity<Void> adicionarCategoria(
-            @PathVariable("tutorialId") Long tutorialId,
-            @PathVariable("categoriaId") Long categoriaId
-    ) {
-        boolean associado =
-                tutorialService.adicionarCategoria(tutorialId, categoriaId);
+    public ResponseEntity<TutorialDto> adicionarCategoria(@PathVariable("tutorialId") Long tutorialId, @PathVariable("categoriaId") Long categoriaId) {
+        boolean associado = tutorialService.adicionarCategoria(tutorialId, categoriaId);
 
         if (!associado) {
             return ResponseEntity.notFound().build();
@@ -123,8 +110,7 @@ public class TutorialController {
     // Get - Buscar Publicados
 
     @GetMapping("/tutorials/published")
-    public ResponseEntity<Page<TutorialModel>> findByPublished(
-            @PageableDefault(size = 10)Pageable peageable
+    public ResponseEntity<Page<TutorialModel>> findByPublished(@PageableDefault(size = 10)Pageable peageable
     ) {
         try {
             Page<TutorialModel> tutorials = tutorialService.findByPublished(peageable);

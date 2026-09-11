@@ -29,7 +29,7 @@ public interface TutorialService {
 
     TutorialDto createTutorial(TutorialDto dto);
 
-    Optional<TutorialDto> getTutorialById(Long id);
+    TutorialDto getTutorialById(Long id);
 
     Optional<TutorialDto> updateTutorial(Long id, TutorialDto dto);
 }
