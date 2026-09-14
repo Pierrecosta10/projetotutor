@@ -2,8 +2,10 @@ package com.tutorials.projetotutor.dto;
 
 import com.tutorials.projetotutor.relations.CategoriaModel;
 import com.tutorials.projetotutor.relations.DetalhesTutorialModel;
+import org.springframework.http.ResponseEntity;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class TutorialDto {

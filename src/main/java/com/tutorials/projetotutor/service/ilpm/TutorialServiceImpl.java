@@ -1,6 +1,7 @@
 package com.tutorials.projetotutor.service.ilpm;
 
 import com.tutorials.projetotutor.dto.TutorialDto;
+import com.tutorials.projetotutor.exception.RecursoNaoEncontradoException;
 import com.tutorials.projetotutor.mapper.TutorialMapper;
 import com.tutorials.projetotutor.model.TutorialModel;
 import com.tutorials.projetotutor.relations.CategoriaModel;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TutorialServiceImpl implements TutorialService {
@@ -24,17 +24,19 @@ public class TutorialServiceImpl implements TutorialService {
     private final TutorialMapper tutorialMapper;
 
     public TutorialServiceImpl(
-            TutorialRepository tutorialRepository, CategoriaRepository categoriaRepository, TutorialMapper tutorialMapper
+            TutorialRepository tutorialRepository,
+            CategoriaRepository categoriaRepository,
+            TutorialMapper tutorialMapper
     ) {
         this.tutorialRepository = tutorialRepository;
         this.categoriaRepository = categoriaRepository;
         this.tutorialMapper = tutorialMapper;
     }
 
-    // Busca todos os tutoriais ou filtra pelo título.
+    // Busca todos ou filtra pelo título.
     @Override
-    public List<TutorialModel> getAllTuorials(String title) {
-
+    @Transactional(readOnly = true)
+    public List<TutorialModel> getAllTutorials(String title) {
         if (title == null) {
             return tutorialRepository.findAll();
         }
@@ -42,114 +44,129 @@ public class TutorialServiceImpl implements TutorialService {
         return tutorialRepository.findByTitle(title);
     }
 
-    // Retorna todos os tutoriais.
+    // Busca pelo ID e retorna o DTO.
     @Override
-    public List<TutorialModel> getAllTutorials(String title) {
-        return tutorialRepository.findAll();
+    @Transactional(readOnly = true)
+    public TutorialDto getTutorialById(Long id) {
+        TutorialModel tutorial = buscarTutorialOuFalhar(id);
+
+        return tutorialMapper.toDto(tutorial);
     }
 
-    // Salva um novo tutorial.
+    // Cria um tutorial com os dados do DTO.
     @Override
-    public TutorialModel createTutorial(TutorialModel tutorial) {
-        return tutorialRepository.save(tutorial);
-    }
+    @Transactional
+    public TutorialDto createTutorial(TutorialDto dto) {
+        TutorialModel tutorial = tutorialMapper.toEntity(dto);
 
-    // Atualiza um tutorial pelo ID.
-    @Override
-    public Optional<TutorialModel> updateTutorial(Long id, TutorialModel tutorial) {
-
-        Optional<TutorialModel> tutorialData = tutorialRepository.findById(id);
-
-        if (tutorialData.isPresent()) {
-
-            TutorialModel tutorialAtual = tutorialData.get();
-
-            // Atualiza os dados do tutorial.
-            tutorialAtual.setTitle(tutorial.getTitle());
-            tutorialAtual.setDescription(tutorial.getDescription());
-            tutorialAtual.setPublished(tutorial.getPublished());
-
-            // Verifica se foram enviados detalhes.
-            if (tutorial.getDetalhes() != null) {
-
-                // Cria os detalhes caso ainda não existam.
-                if (tutorialAtual.getDetalhes() == null) {
-                    tutorialAtual.setDetalhes(new DetalhesTutorialModel());
-                }
-
-                tutorialAtual.getDetalhes().setObjetivo(tutorial.getDetalhes().getObjetivo()
-                );
-
-                tutorialAtual.getDetalhes().setDuracaoMinutos(tutorial.getDetalhes().getDuracaoMinutos()
-                );
-            }
-
-            TutorialModel tutorialAtualizado = tutorialRepository.save(tutorialAtual);
-
-            return Optional.of(tutorialAtualizado);
+        // Define como não publicado quando o valor não é informado.
+        if (dto.getPublished() == null) {
+            tutorial.setPublished(false);
         }
 
-        // Retorna vazio se não encontrar o tutorial.
-        return Optional.empty();
+        TutorialModel tutorialComDetalhes =
+                atualizarDetalhes(dto, tutorial);
+
+        TutorialModel tutorialSalvo =
+                tutorialRepository.save(tutorialComDetalhes);
+
+        return tutorialMapper.toDto(tutorialSalvo);
+    }
+
+    // Atualiza um tutorial existente.
+    @Override
+    @Transactional
+    public TutorialDto updateTutorial(Long id, TutorialDto dto) {
+        TutorialModel tutorialAtual = buscarTutorialOuFalhar(id);
+
+        // Atualiza os campos simples.
+        tutorialMapper.update(dto, tutorialAtual);
+
+        // Atualiza os detalhes.
+        TutorialModel tutorialComDetalhes =
+                atualizarDetalhes(dto, tutorialAtual);
+
+        TutorialModel tutorialSalvo =
+                tutorialRepository.save(tutorialComDetalhes);
+
+        return tutorialMapper.toDto(tutorialSalvo);
     }
 
     // Busca tutoriais pelo título.
     @Override
-    public List<TutorialModel> findBytitle(String tile) {
-        return tutorialRepository.findByTitle(tile);
+    @Transactional(readOnly = true)
+    public List<TutorialModel> findByTitle(String title) {
+        return tutorialRepository.findByTitle(title);
     }
 
-    // Exclui um tutorial pelo ID.
+    // Busca os publicados com paginação.
     @Override
-    public void deleteTutorial(Long id) {
-        tutorialRepository.deleteById(id);
+    @Transactional(readOnly = true)
+    public Page<TutorialModel> findByPublished(Pageable pageable) {
+        return tutorialRepository.findByPublished(true, pageable);
     }
 
-    // Retorna os tutoriais publicados com paginação.
-    @Override
-    public Page<TutorialModel> findByPublished(Pageable peageable) {
-        return tutorialRepository.findByPublished(true, peageable);
-    }
-
-    // Adiciona uma categoria a um tutorial.
+    // Associa uma categoria e retorna o tutorial atualizado.
     @Override
     @Transactional
-    public boolean adicionarCategoria(
-            Long tutorialId, Long categoriaId
+    public TutorialDto adicionarCategoria(
+            Long tutorialId,
+            Long categoriaId
     ) {
+        TutorialModel tutorial = buscarTutorialOuFalhar(tutorialId);
 
-        Optional<TutorialModel> tutorialData =
-                tutorialRepository.findById(tutorialId);
-
-        Optional<CategoriaModel> categoriaData = categoriaRepository.findById(categoriaId);
-
-        if (tutorialData.isEmpty() || categoriaData.isEmpty()) {
-            return false;
-        }
-
-        TutorialModel tutorial = tutorialData.get();
-        CategoriaModel categoria = categoriaData.get();
+        CategoriaModel categoria =
+                categoriaRepository.findById(categoriaId)
+                        .orElseThrow(() ->
+                                new RecursoNaoEncontradoException(
+                                        "Categoria", categoriaId
+                                )
+                        );
 
         tutorial.getCategorias().add(categoria);
 
-        return true;
+        // O vínculo é gravado ao concluir a transação.
+        return tutorialMapper.toDto(tutorial);
     }
 
-    private TutorialModel atualizarDetalhes(TutorialDto dto, TutorialModel tutorial
+    // Exclui um tutorial existente.
+    @Override
+    @Transactional
+    public void deleteTutorial(Long id) {
+        TutorialModel tutorial = buscarTutorialOuFalhar(id);
+
+        tutorialRepository.delete(tutorial);
+    }
+
+    // Busca o tutorial ou lança a exceção.
+    private TutorialModel buscarTutorialOuFalhar(Long id) {
+        return tutorialRepository.findById(id)
+                .orElseThrow(() ->
+                        new RecursoNaoEncontradoException("Tutorial", id)
+                );
+    }
+
+    // Preenche os detalhes e retorna o tutorial.
+    private TutorialModel atualizarDetalhes(
+            TutorialDto dto,
+            TutorialModel tutorial
     ) {
         DetalhesTutorialModel detalhesRecebidos = dto.getDetalhes();
 
-        // Mantém o tutorial quando não há detalhes para atualizar.
+        // Mantém os detalhes atuais quando não forem enviados.
         if (detalhesRecebidos == null) {
             return tutorial;
         }
 
+        // Cria os detalhes caso ainda não existam.
         if (tutorial.getDetalhes() == null) {
             tutorial.setDetalhes(new DetalhesTutorialModel());
         }
 
-        DetalhesTutorialModel detalhesAtuais = tutorial.getDetalhes();
+        DetalhesTutorialModel detalhesAtuais =
+                tutorial.getDetalhes();
 
+        // Atualiza os campos sem alterar o ID.
         if (detalhesRecebidos.getObjetivo() != null) {
             detalhesAtuais.setObjetivo(
                     detalhesRecebidos.getObjetivo()
@@ -163,51 +180,5 @@ public class TutorialServiceImpl implements TutorialService {
         }
 
         return tutorial;
-    }
-
-    // Cria um tutorial usando DTO.
-    @Override
-    @Transactional
-    public TutorialDto createTutorial(TutorialDto dto) {
-
-        TutorialModel tutorial = tutorialMapper.toEntity(dto);
-
-        TutorialModel tutorialSalvo = tutorialRepository.save(tutorial);
-
-        // Converte o Model para DTO.
-        return tutorialMapper.toDto(tutorialSalvo);
-    }
-
-    // Busca um tutorial pelo ID e retorna como DTO.
-    @Override
-    @Transactional(readOnly = true)
-    public TutorialDto getTutorialById(Long id) {
-
-        Optional<TutorialModel> tutorialModel = tutorialRepository.findById(id);
-
-        if(tutorialModel.isPresent()){
-            TutorialModel tutorialModeResp = tutorialModel.get();
-            return tutorialMapper.toDto(tutorialModeResp);
-        }
-
-        return ;
-    }
-
-    // Atualiza um tutorial usando DTO.
-    @Override
-    @Transactional
-    public Optional<TutorialDto> updateTutorial(Long id, TutorialDto dto) {
-
-        return tutorialRepository.findById(id).map(tutorial -> {
-
-                    // Atualiza o Model com os dados do DTO.
-                    tutorialMapper.update(dto, tutorial);
-
-                    // Salva as alterações.
-                    TutorialModel tutorialAtualizado = tutorialRepository.save(tutorial);
-
-                    // Retorna o tutorial atualizado como DTO.
-                    return tutorialMapper.toDto(tutorialAtualizado);
-                });
     }
 }
