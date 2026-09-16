@@ -110,17 +110,12 @@ public class TutorialServiceImpl implements TutorialService {
     @Override
     @Transactional
     public TutorialDto adicionarCategoria(
-            Long tutorialId,
-            Long categoriaId
-    ) {
+            Long tutorialId, Long categoriaId) {
         TutorialModel tutorial = buscarTutorialOuFalhar(tutorialId);
 
         CategoriaModel categoria =
                 categoriaRepository.findById(categoriaId)
-                        .orElseThrow(() ->
-                                new RecursoNaoEncontradoException(
-                                        "Categoria", categoriaId
-                                )
+                        .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria", categoriaId)
                         );
 
         tutorial.getCategorias().add(categoria);
